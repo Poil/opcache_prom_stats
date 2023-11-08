@@ -1,0 +1,23 @@
+{
+    "name": "Poil/opcache_prom_stats",
+    "description": "Opcache Stats for Prometheus",
+    "require": {
+        "promphp/prometheus_client_php": "^2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Claranet\\OpcachePromStats\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Poil",
+            "email": "poil@donotspam.me"
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false
+        }
+    }
+}
