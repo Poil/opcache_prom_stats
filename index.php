@@ -13,7 +13,7 @@ $registry = new CollectorRegistry($adapter);
 
 $php_v=PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
 # Labels building
-if (substr(PHP_SAPI, 0, 3) == 'cgi') {
+if (str_contains(PHP_SAPI, 'cgi')) {
   $pool_info = fpm_get_status();
   $labels = ['php_version', 'php_sapi', 'fpm_pool'];
   $labels_values = [$php_v, PHP_SAPI, $pool_info['pool']];
