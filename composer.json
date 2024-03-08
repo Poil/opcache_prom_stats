@@ -1,5 +1,5 @@
 {
-    "name": "Poil/opcache_prom_stats",
+    "name": "poil/opcache_prom_stats",
     "description": "Opcache Stats for Prometheus",
     "require": {
         "promphp/prometheus_client_php": "^2.7"
