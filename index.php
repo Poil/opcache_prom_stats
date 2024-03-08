@@ -71,16 +71,6 @@ $opcacheStringsMemoryFree->set(
     $labels_values
 );
 
-$opcacheStringsMemoryUsed->set(
-    $opcacheStatus['interned_strings_usage']['used_memory'],
-    $labels_values
-);
-
-$opcacheStringsMemoryFree->set(
-    $opcacheStatus['interned_strings_usage']['free_memory'],
-    $labels_values
-);
-
 $opcacheHits->set(
     $opcacheStatus['opcache_statistics']['hits'],
     $labels_values
