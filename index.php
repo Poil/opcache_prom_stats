@@ -45,4 +45,21 @@ if (is_array($status)) {
     metric('cached_keys', 'gauge', 'cached keys', $stats['num_cached_keys']);
     metric('max_cached_keys', 'gauge', 'max cached keys', $stats['max_cached_keys']);
     metric('hit_rate', 'gauge', 'hit_rate', $stats['opcache_hit_rate']);
+    metric('blacklist_misses_total', 'counter', 'blacklist misses', $stats['blacklist_misses']);
+
+    metric('cache_full', 'gauge', 'cache full (memory or keys)', (int) $status['cache_full']);
+    metric('restart_pending', 'gauge', 'restart pending', (int) $status['restart_pending']);
+    metric('restart_in_progress', 'gauge', 'restart in progress', (int) $status['restart_in_progress']);
+    metric('oom_restarts_total', 'counter', 'restarts on out of memory', $stats['oom_restarts']);
+    metric('hash_restarts_total', 'counter', 'restarts on max_accelerated_files reached', $stats['hash_restarts']);
+    metric('manual_restarts_total', 'counter', 'restarts by opcache_reset()', $stats['manual_restarts']);
+    metric('start_time_seconds', 'gauge', 'start time (unix timestamp)', $stats['start_time']);
+    metric('last_restart_time_seconds', 'gauge', 'last restart time (unix timestamp, 0 if none)', $stats['last_restart_time']);
+
+    # No jit key when PHP is built without JIT
+    if (isset($status['jit'])) {
+        metric('jit_enabled', 'gauge', 'jit enabled', (int) $status['jit']['enabled']);
+        metric('jit_buffer_size', 'gauge', 'jit buffer size', $status['jit']['buffer_size']);
+        metric('jit_buffer_free', 'gauge', 'jit buffer free', $status['jit']['buffer_free']);
+    }
 }
