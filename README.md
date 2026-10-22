@@ -3,16 +3,7 @@ The goal of this project is to have a native PHP page to display Opcache stats i
 
 ## Installation
 
-```
-git clone (...)
-cd opcache_stats
-composer install
-```
-
-If you want an artifact
-```
-tar --exclude-vcs -zcvf opcache_stats.tar.gz opcache_stats
-```
+A single file without dependencies: copy `index.php` (e.g. to `/srv/www/monitoring/opcache_stats/index.php`).
 
 ## Configuration
 
