@@ -3,16 +3,9 @@ The goal of this project is to have a native PHP page to display Opcache stats i
 
 ## Installation
 
-```
-git clone (...)
-cd opcache_stats
-composer install
-```
+A single file without dependencies: copy `index.php` (e.g. to `/srv/www/monitoring/opcache_stats/index.php`).
 
-If you want an artifact
-```
-tar --exclude-vcs -zcvf opcache_stats.tar.gz opcache_stats
-```
+The previous version built on `promphp/prometheus_client_php` (`composer install`) stays available on the [`composer`](https://github.com/Poil/opcache_prom_stats/tree/composer) branch and the `v1.x` releases.
 
 ## Configuration
 

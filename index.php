@@ -1,114 +1,48 @@
 <?php
-header("Content-Type: text/plain");
-require __DIR__ . '/vendor/autoload.php';
+header('Content-Type: text/plain; version=0.0.4');
 
-use Prometheus\CollectorRegistry;
-use Prometheus\RenderTextFormat;
-use Prometheus\Storage\InMemory;
-use Prometheus\Gauge;
-use Prometheus\Counter;
-
-$adapter = new InMemory();
-$registry = new CollectorRegistry($adapter);
-
-$php_v=PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
 # Labels building
+$labels = [
+    'php_version' => PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
+    'php_sapi' => PHP_SAPI,
+];
 if (str_contains(PHP_SAPI, 'cgi')) {
-  $pool_info = fpm_get_status();
-  $labels = ['php_version', 'php_sapi', 'fpm_pool'];
-  $labels_values = [$php_v, PHP_SAPI, $pool_info['pool']];
-} else {
-  $labels = ['php_version', 'php_sapi'];
-  $labels_values = [$php_v, PHP_SAPI];
+    $labels['fpm_pool'] = fpm_get_status()['pool'];
 }
+$labels = implode(',', array_map(
+    fn ($k, $v) => $k . '="' . addcslashes($v, "\\\"\n") . '"',
+    array_keys($labels),
+    $labels
+));
 
-# Span building
-$opcacheMemoryUsed = $registry->registerGauge('opcache', 'memory_used', 'memory used', $labels);
-$opcacheMemoryFree = $registry->registerGauge('opcache', 'memory_free', 'memory free', $labels);
-$opcacheMemoryWasted = $registry->registerGauge('opcache', 'memory_wasted', 'memory wasted', $labels);
-$opcacheMemoryWastedPercentage = $registry->registerGauge('opcache', 'memory_wasted_percentage', 'memory wasted_percentage', $labels);
-
-$opcacheStringsMemoryUsed = $registry->registerGauge('opcache', 'interned_string_memory_used', 'interned string memory used', $labels);
-$opcacheStringsMemoryFree = $registry->registerGauge('opcache', 'interned_string_memory_free', 'interned string memory free', $labels);
-
-$opcacheHits = $registry->registerCounter('opcache', 'hits_total', 'hits', $labels);
-$opcacheMisses = $registry->registerCounter('opcache', 'misses_total', 'misses', $labels);
-
-$opcacheCachedScripts = $registry->registerGauge('opcache', 'cached_scripts', 'cached scripts', $labels);
-$opcacheCachedKeys = $registry->registerGauge('opcache', 'cached_keys', 'cached keys', $labels);
-$opcacheMaxCachedKeys = $registry->registerGauge('opcache', 'max_cached_keys', 'max cached keys', $labels);
-$opcacheHitRate = $registry->registerGauge('opcache', 'hit_rate', 'hit_rate', $labels);
-
-$opcacheEnabled = $registry->registerGauge('opcache', 'enabled', 'opcache enabled', $labels);
+function metric(string $name, string $type, string $help, $value): void
+{
+    global $labels;
+    echo "# HELP opcache_$name $help\n# TYPE opcache_$name $type\nopcache_$name{" . $labels . "} $value\n";
+}
 
 # false when opcache is disabled; false skips the per-script list
-$opcacheStatus = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
-$opcacheEnabled->set(is_array($opcacheStatus) ? 1 : 0, $labels_values);
+$status = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
+metric('enabled', 'gauge', 'opcache enabled', is_array($status) ? 1 : 0);
 
-if (is_array($opcacheStatus)) {
+if (is_array($status)) {
+    $memory = $status['memory_usage'];
+    $strings = $status['interned_strings_usage'];
+    $stats = $status['opcache_statistics'];
 
-    $opcacheMemoryUsed->set(
-        $opcacheStatus['memory_usage']['used_memory'],
-        $labels_values
-    );
+    metric('memory_used', 'gauge', 'memory used', $memory['used_memory']);
+    metric('memory_free', 'gauge', 'memory free', $memory['free_memory']);
+    metric('memory_wasted', 'gauge', 'memory wasted', $memory['wasted_memory']);
+    metric('memory_wasted_percentage', 'gauge', 'memory wasted_percentage', $memory['current_wasted_percentage']);
 
-    $opcacheMemoryFree->set(
-        $opcacheStatus['memory_usage']['free_memory'],
-        $labels_values
-    );
+    metric('interned_string_memory_used', 'gauge', 'interned string memory used', $strings['used_memory']);
+    metric('interned_string_memory_free', 'gauge', 'interned string memory free', $strings['free_memory']);
 
-    $opcacheMemoryWasted->set(
-        $opcacheStatus['memory_usage']['wasted_memory'],
-        $labels_values
-    );
+    metric('hits_total', 'counter', 'hits', $stats['hits']);
+    metric('misses_total', 'counter', 'misses', $stats['misses']);
 
-    $opcacheMemoryWastedPercentage->set(
-        $opcacheStatus['memory_usage']['current_wasted_percentage'],
-        $labels_values
-    );
-
-    $opcacheStringsMemoryUsed->set(
-        $opcacheStatus['interned_strings_usage']['used_memory'],
-        $labels_values
-    );
-
-    $opcacheStringsMemoryFree->set(
-        $opcacheStatus['interned_strings_usage']['free_memory'],
-        $labels_values
-    );
-
-    $opcacheHits->incBy(
-        $opcacheStatus['opcache_statistics']['hits'],
-        $labels_values
-    );
-
-    $opcacheMisses->incBy(
-        $opcacheStatus['opcache_statistics']['misses'],
-        $labels_values
-    );
-
-    $opcacheCachedScripts->set(
-        $opcacheStatus['opcache_statistics']['num_cached_scripts'],
-        $labels_values
-    );
-
-    $opcacheCachedKeys->set(
-        $opcacheStatus['opcache_statistics']['num_cached_keys'],
-        $labels_values
-    );
-
-    $opcacheMaxCachedKeys->set(
-        $opcacheStatus['opcache_statistics']['max_cached_keys'],
-        $labels_values
-    );
-
-    $opcacheHitRate->set(
-        $opcacheStatus['opcache_statistics']['opcache_hit_rate'],
-        $labels_values
-    );
-
+    metric('cached_scripts', 'gauge', 'cached scripts', $stats['num_cached_scripts']);
+    metric('cached_keys', 'gauge', 'cached keys', $stats['num_cached_keys']);
+    metric('max_cached_keys', 'gauge', 'max cached keys', $stats['max_cached_keys']);
+    metric('hit_rate', 'gauge', 'hit_rate', $stats['opcache_hit_rate']);
 }
-
-$renderer = new RenderTextFormat();
-
-echo $renderer->render($registry->getMetricFamilySamples());
