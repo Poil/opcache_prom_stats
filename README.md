@@ -5,6 +5,8 @@ The goal of this project is to have a native PHP page to display Opcache stats i
 
 A single file without dependencies: copy `index.php` (e.g. to `/srv/www/monitoring/opcache_stats/index.php`).
 
+The previous version built on `promphp/prometheus_client_php` (`composer install`) stays available on the [`composer`](https://github.com/Poil/opcache_prom_stats/tree/composer) branch and the `v1.x` releases.
+
 ## Configuration
 
 ### Apache HTTPd Server
