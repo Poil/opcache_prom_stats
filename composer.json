@@ -4,11 +4,6 @@
     "require": {
         "promphp/prometheus_client_php": "^2.7"
     },
-    "autoload": {
-        "psr-4": {
-            "Claranet\\OpcachePromStats\\": "src/"
-        }
-    },
     "authors": [
         {
             "name": "Poil",
